@@ -4,11 +4,18 @@
         
         <script src="https://code.jquery.com/jquery-3.5.1.slim.js"
             integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.css">
         <script src="js/run.js"></script>
     </head>
     <body>
         <div class="content">
-            <button onclick="submit();">Run file run.py</button>
+            <button onclick="submitPython();">Run Python file</button>
+            <button onclick="submitJava();">Run Java file</button>
+            <button onclick="submitCPP();">Run C++ file</button>
+            <div class="dropzone" id="dropzone"></div>
+            <button id="dropzoneSubmit">Upload</button>
             <p id="output"></p>
         </div>
     </body>

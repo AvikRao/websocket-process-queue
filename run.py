@@ -1,5 +1,1 @@
-import time
-print('yep')
-while True: 
-    pass
-
+print("This is a Python file.")

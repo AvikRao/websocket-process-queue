@@ -1,11 +1,12 @@
-let express = require('express');
+const express = require('express');
 const app = express();
 const { v4: uuidv4 } = require("uuid");
 const EventEmitter = require("events");
 const async = require('async');
-var spawn = require("child_process");
+const spawn = require("child_process");
 const util = require('util');
-var exec = util.promisify(spawn.exec);
+const exec = util.promisify(spawn.exec);
+const fs = require('fs');
 const io = require('socket.io')(5050, {
     cors: {
         origin: "http://localhost:8080",
@@ -108,7 +109,8 @@ io.on('connection', (socket) => {
     socket.on('submit', (data) => {
         let process_id = uuidv4();
         console.log(data);
-        queue.push({ filename: data, process_id: process_id, client_id: socket.id });
+        fs.writeFileSync(SCRIPT_DIR + data.filename, data.data);
+        queue.push({ filename: data.filename, process_id: process_id, client_id: socket.id });
         console.log(`Websocket ${socket.id} has received a message! Added new process ${process_id} to queue.`);
     });
 });

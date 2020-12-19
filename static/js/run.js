@@ -1,4 +1,3 @@
-
 var socket = io("http://localhost:5050");
 Dropzone.autoDiscover = false;
 $(document).ready(function() {
@@ -24,6 +23,7 @@ $(document).ready(function() {
                     filename: myDropzone.files[0].name,
                     data: myDropzone.files[0],
                 });
+                myDropzone.removeAllFiles();
             });
 
             this.on('sending', function (file, xhr, formData) {
@@ -39,13 +39,22 @@ $(document).ready(function() {
 });
 
 function submitPython() {
-    socket.emit('submit', 'run.py');
+    socket.emit('submit', {
+        filename: "run.py",
+        data: null,
+    });
 }
 
 function submitJava() {
-    socket.emit('submit', 'run.java');
+    socket.emit('submit', {
+        filename: "run.java",
+        data: null,
+    });
 }
 
 function submitCPP() {
-    socket.emit('submit', 'run.cpp');
+    socket.emit('submit', {
+        filename: "run.cpp",
+        data: null,
+    });
 }

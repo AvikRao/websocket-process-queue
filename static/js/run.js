@@ -1,15 +1,14 @@
 
-var socket;
+var socket = io("http://localhost:5050");
 Dropzone.autoDiscover = false;
 $(document).ready(function() {
-    socket = new WebSocket('ws://localhost:5050');
 
-    socket.onmessage = function(message) {
-        let str = message.data.replace(/(?:\r\n|\r|\n)/g, '<br>');
+    socket.on("output", (output) => {
+        let str = output.replace(/(?:\r\n|\r|\n)/g, '<br>');
         $("#output").html((index, oldcontent) => {
             return oldcontent + str;
         });
-    }
+    });
 
     $("#dropzone").dropzone({
         autoProcessQueue: false,
@@ -21,7 +20,10 @@ $(document).ready(function() {
             // Update selector to match your button
             $("#dropzoneSubmit").click(function (e) {
                 e.preventDefault();
-                console.log(myDropzone.files[0]);
+                socket.emit('submit', {
+                    filename: myDropzone.files[0].name,
+                    data: myDropzone.files[0],
+                });
             });
 
             this.on('sending', function (file, xhr, formData) {
@@ -37,13 +39,13 @@ $(document).ready(function() {
 });
 
 function submitPython() {
-    socket.send('run.py');
+    socket.emit('submit', 'run.py');
 }
 
 function submitJava() {
-    socket.send('run.java');
+    socket.emit('submit', 'run.java');
 }
 
 function submitCPP() {
-    socket.send('run.cpp');
+    socket.emit('submit', 'run.cpp');
 }

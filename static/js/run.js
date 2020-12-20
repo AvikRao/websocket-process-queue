@@ -3,10 +3,11 @@ Dropzone.autoDiscover = false;
 $(document).ready(function() {
 
     socket.on("output", (output) => {
-        let str = output.replace(/(?:\r\n|\r|\n)/g, '<br>');
-        $("#output").html((index, oldcontent) => {
-            return oldcontent + str;
-        });
+        // let str = output.replace(/(?:\r\n|\r|\n)/g, '<br>');
+        // $("#output").html((index, oldcontent) => {
+        //     return oldcontent + str;
+        // });
+        $('<div/>').text(output).appendTo(".output");
     });
 
     $("#dropzone").dropzone({

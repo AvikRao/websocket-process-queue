@@ -69,7 +69,7 @@ async function runFile(filename, process_id, client_id) {
     let extension = filename.match(/\..+$/)[0];
     let str = '';
     if (extension == ".py") {
-        let pythonProcess = spawn.spawn('python3.8', ['-u', filename, "./puzzles.txt"]);
+        let pythonProcess = spawn.spawn('python3.8', ['-u', filename]);
         // timeout(process_id);
         pythonProcess.stdout.on('data', (data) => {
             io.to(client_id).emit('output', data.toString());

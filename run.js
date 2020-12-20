@@ -14,8 +14,8 @@ const io = require('socket.io')(5050, {
     }
 });
 
-const CONCURRENCY = 1;
-const TIMEOUT = 6;
+const CONCURRENCY = 5;
+const TIMEOUT = 60;
 const SCRIPT_DIR = "scripts/";
 
 const emitter = new EventEmitter();
@@ -40,9 +40,6 @@ var queue = async.queue(async function (obj, callback) {
 }, CONCURRENCY);
 
 async function timeout(process_id) {
-    // setTimeout(() => {
-    //     processEmitter.emit(process_id);
-    // }, TIMEOUT*1000);
     return new Promise((resolve) => {
         let wait = setTimeout(() => {
             clearTimeout(wait);
@@ -63,8 +60,9 @@ async function runFile(filename, process_id, client_id) {
     let extension = filename.match(/\..+$/)[0];
     let str = '';
     if (extension == ".py") {
+
         let pythonProcess = spawn.spawn('python3.8', ['-u', filename]);
-        // timeout(process_id);
+
         pythonProcess.stdout.on('data', (data) => {
             str += data.toString();
             io.to(client_id).emit('output', data.toString());
@@ -199,7 +197,6 @@ io.on('connection', (socket) => {
 
     console.log(`Someone has connected to the websocket with id ${socket.id}`);
 
-    // handle the event sent with socket.send()
     socket.on('submit', (data) => {
         let process_id = uuidv4();
         if (data.data != null) {

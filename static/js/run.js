@@ -41,12 +41,10 @@ $(document).ready(function() {
 
     $("#dropzone").dropzone({
         autoProcessQueue: false,
-        url: 'upload_files.php',
         init: function () {
 
             var myDropzone = this;
 
-            // Update selector to match your button
             $("#dropzoneSubmit").click(function (e) {
                 e.preventDefault();
                 $(".output").append("<br>");
@@ -55,14 +53,6 @@ $(document).ready(function() {
                     data: myDropzone.files[0],
                 });
                 myDropzone.removeAllFiles();
-            });
-
-            this.on('sending', function (file, xhr, formData) {
-                // Append all form inputs to the formData Dropzone will POST
-                var data = $('#frmTarget').serializeArray();
-                $.each(data, function (key, el) {
-                    formData.append(el.name, el.value);
-                });
             });
         }
     });

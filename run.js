@@ -14,7 +14,7 @@ const io = require('socket.io')(5050, {
     }
 });
 
-const CONCURRENCY = 5;
+const CONCURRENCY = 1;
 const TIMEOUT = 6;
 const SCRIPT_DIR = "scripts/";
 
@@ -32,7 +32,7 @@ let listener = app.listen(app.get('port'), function () {
 
 var processOutputs = {};
 var queue = async.queue(async function (obj, callback) {
-    io.to(obj.client_id).emit("output", `Starting process ${obj.process_id}...\n`);
+    io.to(obj.client_id).emit("system", `Starting process ${obj.process_id}...\n`);
     let r = await runFile(SCRIPT_DIR + obj.filename, obj.process_id, obj.client_id);
     processOutputs[obj.process_id] = r;
     emitter.emit(obj.process_id);
@@ -59,12 +59,6 @@ async function success(process_id) {
     });
 }
 
-// async function cppExecute(filename, process_id, client_id) {
-//     let { stdout, stderr } = await exec(`./${filename.match(/(.+)\.cpp$/)[1]}.out`);
-//     io.to(client_id).emit('output', stdout.toString() + stderr.toString() + '\n');
-//     processEmitter.emit(process_id);
-// }
-
 async function runFile(filename, process_id, client_id) {
     let extension = filename.match(/\..+$/)[0];
     let str = '';
@@ -72,12 +66,13 @@ async function runFile(filename, process_id, client_id) {
         let pythonProcess = spawn.spawn('python3.8', ['-u', filename]);
         // timeout(process_id);
         pythonProcess.stdout.on('data', (data) => {
+            console.log(data.toString())
             io.to(client_id).emit('output', data.toString());
         });
 
         pythonProcess.stderr.on('data', (data) => {
             console.log(data.toString());
-            io.to(client_id).emit('output', data.toString());
+            io.to(client_id).emit('error', data.toString());
         });
 
         pythonProcess.on('close', (code) => {
@@ -88,18 +83,18 @@ async function runFile(filename, process_id, client_id) {
         let exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
         if (exitStatus == "success") {
             console.log(`Process ${process_id} completed successfully.`);
-            io.to(client_id).emit("output", `Process ${process_id} complete.\n`);
+            io.to(client_id).emit("success", `Process ${process_id} complete.\n`);
         } else if (exitStatus == "timeout") {
             console.log(`Process ${process_id} timed out.`);
-            io.to(client_id).emit("output", `Process ${process_id} timed out.\n`);
+            io.to(client_id).emit("timeout", `Process ${process_id} timed out.\n`);
         }
 
         pythonProcess.kill();
         return str;
 
     } else if (extension == ".java") {
-    
-        timeout(process_id);
+
+        let compileErrors = false;
 
         let javaCompile = spawn.spawn('javac', [filename]);
 
@@ -109,7 +104,8 @@ async function runFile(filename, process_id, client_id) {
         });
 
         javaCompile.stderr.on('data', (data) => {
-            io.to(client_id).emit('output', data.toString());
+            compileErrors = true;
+            io.to(client_id).emit('error', data.toString());
         });
 
         javaCompile.on('close', (code) => {
@@ -117,34 +113,42 @@ async function runFile(filename, process_id, client_id) {
         });
 
         let exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
+        javaCompile.kill();
 
-        let javaProcess = spawn.spawn('java', ['-cp', __dirname + '/' + SCRIPT_DIR, filename.match(/(.+)\.java$/)[1].slice(SCRIPT_DIR.length)]);
+        if (!compileErrors) {
+            
+            let javaProcess = spawn.spawn('java', ['-cp', __dirname + '/' + SCRIPT_DIR, filename.match(/(.+)\.java$/)[1].slice(SCRIPT_DIR.length)]);
 
-        javaProcess.stdout.on('data', (data) => {
-            io.to(client_id).emit('output', data.toString());
-        });
+            javaProcess.stdout.on('data', (data) => {
+                io.to(client_id).emit('output', data.toString());
+            });
 
-        javaProcess.stderr.on('data', (data) => {
-            io.to(client_id).emit('output', data.toString());
-        });
+            javaProcess.stderr.on('data', (data) => {
+                io.to(client_id).emit('error', data.toString());
+            });
 
-        javaProcess.on('close', (code) => {
-            processEmitter.emit(process_id);
-        });
+            javaProcess.on('close', (code) => {
+                processEmitter.emit(process_id);
+            });
 
-        exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
+            exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
+
+        }
+
         if (exitStatus == "success") {
             console.log(`Process ${process_id} completed successfully.`);
-            io.to(client_id).emit("output", `Process ${process_id} complete.\n`);
+            io.to(client_id).emit("success", `Process ${process_id} complete.\n`);
         } else if (exitStatus == "timeout") {
             console.log(`Process ${process_id} timed out.`);
-            io.to(client_id).emit("output", `Process ${process_id} timed out.\n`);
+            io.to(client_id).emit("timeout", `Process ${process_id} timed out.\n`);
         }
 
         javaProcess.kill();
         return str;
 
     } else if (extension == ".cpp") {
+
+        let compileErrors = false;
 
         let cppCompile = spawn.spawn('g++', ['-o', `${filename.match(/(.+)\.cpp$/)[1]}.out`, filename]);
 
@@ -154,7 +158,8 @@ async function runFile(filename, process_id, client_id) {
         });
 
         cppCompile.stderr.on('data', (data) => {
-            io.to(client_id).emit('output', data.toString());
+            compileErrors = true;
+            io.to(client_id).emit('error', data.toString());
         });
 
         cppCompile.on('close', (code) => {
@@ -162,20 +167,25 @@ async function runFile(filename, process_id, client_id) {
         });
 
         let exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
+        cppCompile.kill();
 
-        let cppProcess = spawn.execFile(`${filename.match(/(.+)\.cpp$/)[1]}.out`, [], (error, stdout, stderr) => {
-            processEmitter.emit(process_id);
-            io.to(client_id).emit('output', stdout.toString() + stderr.toString() + '\n');
-        })
-
-        exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
+        if (!compileErrors) {
+            let cppProcess = spawn.execFile(`${filename.match(/(.+)\.cpp$/)[1]}.out`, [], (error, stdout, stderr) => {
+                processEmitter.emit(process_id);
+                io.to(client_id).emit('error', stderr.toString());
+                io.to(client_id).emit('output', stdout.toString() + '\n');
+            })
+            exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
+        }
+        
         if (exitStatus == "success") {
             console.log(`Process ${process_id} completed successfully.`);
-            io.to(client_id).emit("output", `Process ${process_id} complete.\n`);
+            io.to(client_id).emit("success", `Process ${process_id} complete.\n`);
         } else if (exitStatus == "timeout") {
             console.log(`Process ${process_id} timed out.`);
-            io.to(client_id).emit("output", `Process ${process_id} timed out.\n`);
+            io.to(client_id).emit("timeout", `Process ${process_id} timed out.\n`);
         }
+        
 
         cppProcess.kill();
         return str;
@@ -194,7 +204,7 @@ io.on('connection', (socket) => {
         }
         queue.push({ filename: data.filename, process_id: process_id, client_id: socket.id });
         console.log(`Connection ${socket.id} has added process ${process_id} to the queue.`);
-        socket.emit("output", `Process ${process_id} has been created and added to the queue at position ${queue.length()}\n`);
+        socket.emit("system", `Process ${process_id} has been created and added to the queue at position ${queue.length()}\n`);
     });
 });
 

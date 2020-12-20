@@ -3,11 +3,40 @@ Dropzone.autoDiscover = false;
 $(document).ready(function() {
 
     socket.on("output", (output) => {
-        // let str = output.replace(/(?:\r\n|\r|\n)/g, '<br>');
-        // $("#output").html((index, oldcontent) => {
-        //     return oldcontent + str;
-        // });
-        $('<div/>').text(output).appendTo(".output");
+        let parsed = output.split(/\n/);
+        for (let line of parsed) {
+            $('<div class="stdout"/>').text(line).appendTo(".output");
+        }
+    });
+
+    socket.on("system", (output) => {
+        let parsed = output.split(/\n/);
+        for (let line of parsed) {
+            $('<div class="system"/>').text(line).appendTo(".output");
+        }
+    });
+
+    socket.on("error", (output) => {
+        let parsed = output.split(/\n/);
+        for (let line of parsed) {
+            $('<div class="error"/>').text(line).appendTo(".output");
+        }
+    });
+
+    socket.on("success", (output) => {
+        let parsed = output.split(/\n/);
+        for (let line of parsed) {
+            $('<div class="success"/>').text(line).appendTo(".output");
+        }
+        $(".output").append("<br>");
+    });
+
+    socket.on("timeout", (output) => {
+        let parsed = output.split(/\n/);
+        for (let line of parsed) {
+            $('<div class="timeout"/>').text(line).appendTo(".output");
+        }
+        $(".output").append("<br>");
     });
 
     $("#dropzone").dropzone({
@@ -20,6 +49,7 @@ $(document).ready(function() {
             // Update selector to match your button
             $("#dropzoneSubmit").click(function (e) {
                 e.preventDefault();
+                $(".output").append("<br>");
                 socket.emit('submit', {
                     filename: myDropzone.files[0].name,
                     data: myDropzone.files[0],

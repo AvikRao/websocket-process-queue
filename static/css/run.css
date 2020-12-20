@@ -1,0 +1,43 @@
+* {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+body {
+    background-color: #101010;
+}
+
+.output {
+    background-color: #000000;
+}
+
+.stdout {
+    color: #ffffff;
+}
+
+.system {
+    color: #ffdb58;
+}
+
+.error {
+    color: #FF0000;
+}
+
+.success {
+    color: #00ff00;
+}
+
+.timeout {
+    color: #FF0000;
+}
+
+.dropzone {
+    background-color:#343434;
+    color: #ffffff;
+}
+
+button {
+    background-color: #4e4e4e;
+    outline: none;
+    color: #a8a8a8;
+}
+

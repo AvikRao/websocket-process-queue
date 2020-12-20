@@ -118,7 +118,7 @@ async function runFile(filename, process_id, client_id) {
 
         let exitStatus = await Promise.race([timeout(process_id), success(process_id)]);
 
-        let javaProcess = spawn.spawn('java', [filename.match(/(.+)\.java$/)[1]]);
+        let javaProcess = spawn.spawn('java', ['-cp', __dirname + '/' + SCRIPT_DIR, filename.match(/(.+)\.java$/)[1].slice(SCRIPT_DIR.length)]);
 
         javaProcess.stdout.on('data', (data) => {
             io.to(client_id).emit('output', data.toString());

@@ -41,6 +41,7 @@ $(document).ready(function() {
 
     $("#dropzone").dropzone({
         autoProcessQueue: false,
+        url: '/unused',
         init: function () {
 
             var myDropzone = this;

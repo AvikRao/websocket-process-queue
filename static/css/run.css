@@ -38,6 +38,10 @@ body {
 button {
     background-color: #4e4e4e;
     outline: none;
-    color: #a8a8a8;
+    color: #e6e6e6;
+}
+
+h2 {
+    color: #ffffff;
 }
 

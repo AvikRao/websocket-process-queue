@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>8081 Testing</title>
+        <title>WS Process Queue</title>
         
         <script src="https://code.jquery.com/jquery-3.5.1.slim.js"
             integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>
@@ -13,10 +13,13 @@
     </head>
     <body>
         <div class="content">
+            <h2>Default test files</h2>
             <button onclick="submitPython();">Run Python file</button>
             <button onclick="submitJava();">Run Java file</button>
             <button onclick="submitCPP();">Run C++ file</button>
+            <h2>Upload your own</h2>
             <div class="dropzone" id="dropzone"></div>
+            <br>
             <button id="dropzoneSubmit">Upload</button>
             <div class="output"></div>
         </div>
